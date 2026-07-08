@@ -35,21 +35,24 @@ There are currently no test files in the repo. Builds are produced with EAS (`ea
 Routing uses **expo-router** (file-based, with `typedRoutes` enabled). The `@/*` path alias maps to the project root.
 
 Screens:
-- `app/_layout.tsx` — root `Stack` wrapping `(tabs)`, `add`, and `edit`. Wrapped in `DarkTheme`; headers are hidden. Loads the SpaceMono font before hiding the splash screen.
-- `app/(tabs)/index.tsx` — home grid (3-column `FlatList` of contact photos). Hosts a custom top nav bar (home / add / edit / delete icons) and holds `editingMode` / `deletingMode` toggle state that reveals per-item EDIT/DELETE buttons.
+- `app/_layout.tsx` — root `Stack` wrapping `index`, `add`, and `edit`. Wrapped in `DarkTheme`; headers are hidden. Loads the SpaceMono font before hiding the splash screen.
+- `app/index.tsx` — home directory grid with the custom `TopBar`, SVG action icons, responsive contact tiles, and edit/delete modes.
 - `app/add.tsx` — pick an image (`expo-image-picker`) + enter a phone number, then save.
-- `app/edit.tsx` — edit an existing contact's image URI and phone; reached via `navigation.navigate('edit', { person })`.
+- `app/edit.tsx` — edit an existing contact's image URI and phone; reached via `router.push({ pathname: '/edit', params: { id } })`.
+- `components/Icon.tsx` — lightweight inline SVG icons built with `react-native-svg`.
+- `components/TopBar.tsx` — shared top bar used by the home, add, and edit screens.
 
 ### State model — important
 
 There is **no React/global state store**. `constants/Person.ts` exports a single module-level mutable array `persons: Person[]` that every screen imports and mutates directly (`persons.push(...)`, `persons.length = 0`, index assignment). Persistence is manual: after any mutation, call `savePersonsToStorage()` (writes the array to AsyncStorage under the key `"persons"`), and `loadPersonsFromStorage()` rehydrates it (called once in the home screen's `useEffect`).
 
 Consequences to keep in mind when editing:
-- Mutating `persons` does **not** trigger re-renders. UI updates rely on navigation/remount, which is why some changes only appear after leaving and returning to a screen.
+- Mutating `persons` does **not** trigger re-renders by itself. Home mirrors it into local React state after loading/deleting so the grid updates immediately.
 - `Person` uses backing fields `_id` / `_phone` with getters/setters (`id`, `phone`), plus a plain `src` field. Serialization/deserialization in `Person.ts` depends on these exact field names — preserve them when changing the shape.
-- New IDs are assigned as `persons.length + 1`, so IDs are not stable across deletions.
+- Fresh installs load demo contacts from `constants/Person.ts` when AsyncStorage does not yet contain saved contacts.
+- New IDs are assigned as the current max ID + 1 so IDs remain stable across deletions.
 
-## Known issues (from README)
+## Current design notes
 
-- An unwanted bottom navigation bar appears on the home screen (`(tabs)` layout).
-- After using EDIT or DELETE mode, the toggle must be pressed again before the app behaves normally (mode state isn't reset after an action).
+- The former `(tabs)` navbar has been removed; the app uses a stack-only router with an in-screen top bar.
+- Direct app imports of `@expo/vector-icons` were replaced with inline SVG icons. `react-native-svg@15.12.1` is declared for Expo SDK 54 compatibility.

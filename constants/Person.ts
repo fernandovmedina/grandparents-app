@@ -30,6 +30,20 @@ export class Person {
 
 export const persons: Person[] = [];
 
+const demoPersons = [
+    new Person(1, 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39?auto=format&fit=crop&w=480&q=80', '5558675301'),
+    new Person(2, 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=480&q=80', '5552047712'),
+    new Person(3, 'https://images.unsplash.com/photo-1552058544-f2b08422138a?auto=format&fit=crop&w=480&q=80', '5553154400'),
+    new Person(4, 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=480&q=80', '5556429810'),
+    new Person(5, 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=480&q=80', '5557751934'),
+    new Person(6, 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=480&q=80', '5559182604'),
+];
+
+const loadDemoPersons = () => {
+    persons.length = 0;
+    persons.push(...demoPersons.map(person => new Person(person.id, person.src, person.phone)));
+};
+
 export const savePersonsToStorage = async () => {
     try {
         const jsonValue = JSON.stringify(persons);
@@ -48,8 +62,11 @@ export const loadPersonsFromStorage = async () => {
             loadedPersons.forEach((p: Person) => {
                 persons.push(new Person(p._id, p.src, p._phone));
             });
+        } else {
+            loadDemoPersons();
         }
     } catch (e) {
         console.error('Error loading persons from AsyncStorage:', e);
+        loadDemoPersons();
     }
 };
